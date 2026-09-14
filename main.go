@@ -47,9 +47,9 @@ var (
 
 func BackendServer(b *Backend) {
 	backendServer := http.NewServeMux()
-	backendServer.HandleFunc("/", rr.backendHit(b))
-	backendServer.HandleFunc("/health", rr.healthCheck(b)) // endpoint to test status of servers
-backendServer.HandleFunc("/fail", rr.failHealth(b))    // endpoint to trigger servers failing
+	backendServer.HandleFunc("/", ip.backendHit(b))
+	backendServer.HandleFunc("/health", ip.healthCheck(b)) // endpoint to test status of servers
+backendServer.HandleFunc("/fail", ip.failHealth(b))    // endpoint to trigger servers failing
 	fmt.Printf("Backend Server Starting - %d\n", b.port)   //
 
 	err := http.ListenAndServe(":"+strconv.Itoa(b.port), backendServer)
@@ -76,7 +76,7 @@ func main() {
 
 	}()
 
-	http.HandleFunc("/", rr.rerouter)
+	http.HandleFunc("/", ip.rerouter)
 	log.Fatal(http.ListenAndServe(":8081", nil))
 }
 

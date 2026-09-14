@@ -52,7 +52,7 @@ func (lc LeastConnections) rerouter(w http.ResponseWriter, r *http.Request) {
 func (lc LeastConnections) backendHit(b *Backend) http.HandlerFunc {
 	return func(http.ResponseWriter, *http.Request) {
 		t := rand.IntN(10) + 1
-		fmt.Println(t, " seconds to compelte request")
+		fmt.Println(b.port, ": " ,t, " seconds to complete request\nQueue:",connections[b.port-8082].Load())
 		time.Sleep(time.Duration(t) * time.Second)
 		fmt.Println("Request Handled")
 	}
