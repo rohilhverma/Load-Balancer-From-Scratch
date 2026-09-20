@@ -100,21 +100,3 @@ curl -i http://localhost:8083/reverse
 
 The next successful health check returns it to rotation. To test request-time retry, use a real transport failure such as an unreachable backend; `/fail` changes only the health endpoint.
 
-## Project Structure
-
-```text
-.
-├── cmd/
-│   └── loadgen/
-│       └── main.go               concurrent load-test client and metrics
-├── docs/
-│   └── images/                   benchmark and test output
-├── Dockerfile                    multi-stage container build
-├── compose.yaml                  load balancer and five backends
-├── main.go                       servers and active health checks
-├── retry.go                      reverse proxy and one-time failover
-├── round_robin.go                Round Robin routing
-├── least_connections.go          Least Connections routing
-├── ip_hash.go                    IP Hash routing
-└── loadtest.sh                   health-failure traffic exercise
-```
