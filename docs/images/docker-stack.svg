@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="430" viewBox="0 0 960 430" role="img" aria-labelledby="title desc">
+  <title id="title">Docker Compose stack startup</title>
+  <desc id="desc">Docker Compose builds the load balancer image and starts five backend containers plus the load balancer.</desc>
+  <rect width="960" height="430" rx="14" fill="#0d1117"/>
+  <rect width="960" height="42" rx="14" fill="#161b22"/>
+  <rect y="28" width="960" height="14" fill="#161b22"/>
+  <circle cx="24" cy="21" r="6" fill="#ff5f56"/><circle cx="45" cy="21" r="6" fill="#ffbd2e"/><circle cx="66" cy="21" r="6" fill="#27c93f"/>
+  <text x="480" y="27" text-anchor="middle" fill="#8b949e" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13">docker compose · six-service stack</text>
+  <text x="28" y="75" fill="#c9d1d9" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="16">
+    <tspan x="28" dy="0" fill="#7ee787">$ docker compose up --build</tspan>
+    <tspan x="28" dy="36" fill="#79c0ff">[+] Running 8/8</tspan>
+    <tspan x="52" dy="29">✔ Image hrl:local                 Built</tspan>
+    <tspan x="52" dy="29">✔ Network hrl_default             Created</tspan>
+    <tspan x="52" dy="29">✔ Container hrl-backend-1-1       Started</tspan>
+    <tspan x="52" dy="29">✔ Container hrl-backend-2-1       Started</tspan>
+    <tspan x="52" dy="29">✔ Container hrl-backend-3-1       Started</tspan>
+    <tspan x="52" dy="29">✔ Container hrl-backend-4-1       Started</tspan>
+    <tspan x="52" dy="29">✔ Container hrl-backend-5-1       Started</tspan>
+    <tspan x="52" dy="29">✔ Container hrl-load-balancer-1   Started</tspan>
+    <tspan x="28" dy="39" fill="#d2a8ff">load-balancer-1  | Load balancer listening on :8081</tspan>
+  </text>
+</svg>

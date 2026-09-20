@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="520" viewBox="0 0 960 520" role="img" aria-labelledby="title desc">
+  <title id="title">Dockerized load-balancer benchmark</title>
+  <desc id="desc">A 10000-request Docker benchmark showing 14430.29 requests per second, zero failures, and 10.259 millisecond p99 latency.</desc>
+  <rect width="960" height="520" rx="14" fill="#0d1117"/>
+  <rect width="960" height="42" rx="14" fill="#161b22"/>
+  <rect y="28" width="960" height="14" fill="#161b22"/>
+  <circle cx="24" cy="21" r="6" fill="#ff5f56"/><circle cx="45" cy="21" r="6" fill="#ffbd2e"/><circle cx="66" cy="21" r="6" fill="#27c93f"/>
+  <text x="480" y="27" text-anchor="middle" fill="#8b949e" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13">docker benchmark · five backends</text>
+  <text x="28" y="76" fill="#c9d1d9" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="17">
+    <tspan x="28" dy="0" fill="#7ee787">$ go run ./cmd/loadgen -requests 10000 -concurrency 50 -clients 250</tspan>
+    <tspan x="28" dy="34">Requests:    10000</tspan>
+    <tspan x="28" dy="27">Concurrency: 50</tspan>
+    <tspan x="28" dy="27">Elapsed:     693ms</tspan>
+    <tspan x="28" dy="27" fill="#79c0ff">RPS:         14430.29</tspan>
+    <tspan x="28" dy="27" fill="#7ee787">Success:     10000</tspan>
+    <tspan x="28" dy="27">Failure:     0</tspan>
+    <tspan x="28" dy="27">Latency:     avg=3.435ms p50=3.033ms p95=7.062ms p99=10.259ms</tspan>
+    <tspan x="28" dy="34">Status codes:</tspan>
+    <tspan x="52" dy="27">200: 10000</tspan>
+    <tspan x="28" dy="34">Backends:</tspan>
+    <tspan x="52" dy="27">8082: 1960    8083: 2040    8084: 1920</tspan>
+    <tspan x="52" dy="27">8085: 2280    8086: 1800</tspan>
+  </text>
+</svg>

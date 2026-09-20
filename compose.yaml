@@ -1,0 +1,49 @@
+x-backend: &backend
+  image: hrl:local
+  restart: unless-stopped
+
+services:
+  load-balancer:
+    image: hrl:local
+    build: .
+    command: ["-mode", "loadbalancer"]
+    environment:
+      BACKENDS: "http://backend-1:8082,http://backend-2:8083,http://backend-3:8084,http://backend-4:8085,http://backend-5:8086"
+    ports:
+      - "8081:8081"
+    depends_on:
+      - backend-1
+      - backend-2
+      - backend-3
+      - backend-4
+      - backend-5
+
+  backend-1:
+    <<: *backend
+    command: ["-mode", "backend", "-port", "8082"]
+    ports:
+      - "8082:8082"
+
+  backend-2:
+    <<: *backend
+    command: ["-mode", "backend", "-port", "8083"]
+    ports:
+      - "8083:8083"
+
+  backend-3:
+    <<: *backend
+    command: ["-mode", "backend", "-port", "8084"]
+    ports:
+      - "8084:8084"
+
+  backend-4:
+    <<: *backend
+    command: ["-mode", "backend", "-port", "8085"]
+    ports:
+      - "8085:8085"
+
+  backend-5:
+    <<: *backend
+    command: ["-mode", "backend", "-port", "8086"]
+    ports:
+      - "8086:8086"

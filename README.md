@@ -33,7 +33,28 @@ Inspect the selected backend:
 curl -i http://localhost:8081/
 ```
 
+## Run with Docker
 
+Build and start the load balancer plus five isolated backend containers:
+
+```bash
+docker compose up --build
+```
+![Docker Compose starting the load balancer and five backends](docs/images/docker-stack.svg)
+
+Run the load generator
+
+```bash
+curl -i http://localhost:8081/
+go run ./cmd/loadgen -requests 10000 -concurrency 50 -clients 250
+```
+
+Take down containers
+
+```bash
+docker compose down
+```
+### Representative Docker Desktop result
 ## Load Test
 
 The repository includes a concurrent Go load generator in `cmd/loadgen`. It uses a fixed worker pool and simulated client IPs to measure throughput, latency percentiles, status codes, failures, and traffic distribution.
@@ -88,6 +109,8 @@ The next successful health check returns it to rotation. To test request-time re
 │       └── main.go               concurrent load-test client and metrics
 ├── docs/
 │   └── images/                   benchmark and test output
+├── Dockerfile                    multi-stage container build
+├── compose.yaml                  load balancer and five backends
 ├── main.go                       servers and active health checks
 ├── retry.go                      reverse proxy and one-time failover
 ├── round_robin.go                Round Robin routing
