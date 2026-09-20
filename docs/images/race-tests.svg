@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="230" viewBox="0 0 960 230" role="img" aria-labelledby="title desc">
+  <title id="title">Go race-test terminal output</title>
+  <desc id="desc">The project and load generator both pass the Go race detector.</desc>
+  <rect width="960" height="230" rx="14" fill="#0d1117"/>
+  <rect width="960" height="42" rx="14" fill="#161b22"/>
+  <rect y="28" width="960" height="14" fill="#161b22"/>
+  <circle cx="24" cy="21" r="6" fill="#ff5f56"/><circle cx="45" cy="21" r="6" fill="#ffbd2e"/><circle cx="66" cy="21" r="6" fill="#27c93f"/>
+  <text x="480" y="27" text-anchor="middle" fill="#8b949e" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13">race tests</text>
+  <text x="28" y="82" fill="#c9d1d9" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18">
+    <tspan x="28" dy="0" fill="#7ee787">$ go test -race ./...</tspan>
+    <tspan x="28" dy="42">ok   HRL                  1.249s</tspan>
+    <tspan x="28" dy="34">ok   HRL/cmd/loadgen      (cached)</tspan>
+    <tspan x="28" dy="42" fill="#7ee787">No data races detected.</tspan>
+  </text>
+</svg>

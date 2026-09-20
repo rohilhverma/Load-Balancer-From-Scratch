@@ -1,13 +1,9 @@
-
 package main
 
 import (
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
-	"net/http/httputil"
-	"net/url"
 	"sync/atomic"
 )
 
@@ -19,29 +15,15 @@ var (
 type RoundRobin struct{}
 
 func (rr RoundRobin) rerouter(w http.ResponseWriter, r *http.Request) {
-	backend, err := atomicCounter()
-	if err != nil {
-		if errors.Is(err, NoActiveServers) {
-			http.Error(w, "No Healthy Backend Available", http.StatusServiceUnavailable)
-		}
-		return
-	}
-	addr, err := url.Parse(backend.address)
-	if err != nil {
-		log.Fatal(("Unable to find new server"))
-	}
-	proxy := &httputil.ReverseProxy{
-		Rewrite: func(s *httputil.ProxyRequest) {
-			s.SetURL(addr)
-		},
-	}
-	proxy.ServeHTTP(w, r)
-	fmt.Println("Proxied to", backend.address)
+	proxyRequest(w, r, func(exclude *Backend) (*Backend, func(), error) {
+		backend, err := atomicCounterExcluding(exclude)
+		return backend, func() {}, err
+	})
 }
 
 func (rr RoundRobin) backendHit(b *Backend) http.HandlerFunc {
-	return func(http.ResponseWriter, *http.Request) {
-		fmt.Println("Handling Request at Port", b.port)
+	return func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("X-Backend-Port", fmt.Sprint(b.port))
 	}
 }
 
@@ -50,7 +32,7 @@ func (rr RoundRobin) healthCheck(b *Backend) http.HandlerFunc {
 		if b.failHealth.Load() {
 			http.Error(w, "Backend unhealthy", http.StatusServiceUnavailable)
 			return
-		} 
+		}
 		w.WriteHeader(http.StatusOK)
 	}
 }
@@ -62,7 +44,18 @@ func (rr RoundRobin) failHealth(b *Backend) http.HandlerFunc {
 	}
 }
 
-func atomicCounter() (*Backend,error) {
+func (rr RoundRobin) reverseHealth(b *Backend) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		b.failHealth.Store(false)
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func atomicCounter() (*Backend, error) {
+	return atomicCounterExcluding(nil)
+}
+
+func atomicCounterExcluding(exclude *Backend) (*Backend, error) {
 	total := len(serverList)
 	if total == 0 {
 		return nil, NoActiveServers
@@ -72,7 +65,7 @@ func atomicCounter() (*Backend,error) {
 		i := int((count.Add(1) - 1) % int64(total))
 		backend := serverList[i]
 		//inactive servers skipped
-		if backend.status.Load() {
+		if backend != exclude && backend.status.Load() {
 			return backend, nil
 		}
 	}

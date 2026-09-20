@@ -1,24 +1,97 @@
-health checks: used to ensure only healthy servers are kept in a load balancer rotation, checking status of every server. 
+# Go Layer-7 Load Balancer
 
-Active Health Checks: Attempt connection to a server/send it a HTTP request at a interval. If connected can't be established, health check fails. Take server out of rotation if fails a number of consectutive failed checks. 
+A standard-library HTTP reverse proxy with health-aware routing, concurrent backend state, and one-time transport failover.
 
-So we are talking about waiting maybe 5 seconds, sending request to server. track number of failures, if hits a threshold, halt the server.
+> Sustained **26.5K requests/second** under concurrent local load testing with **5.15 ms P99 latency** and **zero failures** across five backends.
+
+## Features
+
+- Round Robin, Least Connections, and  IP Hash routing
+- Active health checks every five seconds
+- Three-failure threshold before removing a backend
+- Automatic recovery and re-entry into rotation
+- One retry on a different healthy backend after a transport failure
+
+- Atomic health and connection state
+
+- Built-in concurrent load generator with latency percentiles
+
+The executable currently uses IP Hash. Round Robin and Least Connections are also implemented. On a transport failure, the proxy excludes the failed backend and retries  once on another healthy backend. 
+## Run
+
+Start the load balancer and its five local backends:
+
+```bash
+go run .
+```
+
+The proxy listens on `localhost:8081`; backends listen on ports `8082` through `8086`.
+
+Inspect the selected backend:
+
+```bash
+curl -i http://localhost:8081/
+```
 
 
-Passive Health Checks: This is where you are monitoring live traffic for errors, generally watching for bad HTTP responses. They'll detect these errors are any point of your proxied service, and require active traffic.
+## Load Test
+
+The repository includes a concurrent Go load generator in `cmd/loadgen`. It uses a fixed worker pool and simulated client IPs to measure throughput, latency percentiles, status codes, failures, and traffic distribution.
+
+With the load balancer running in another terminal:
+
+```bash
+go run ./cmd/loadgen -requests 10000 -concurrency 50 -clients 250
+```
+
+The generator reports attempted RPS, successful and failed requests, average latency, status codes, and per-backend request counts.
+
+### Load-test screenshot
+
+![Concurrent load-test terminal output](docs/images/load-test.svg)
+
+### Representative local result
+
+| Metric | Result |
+|---|---:|
+| Requests | 10,000 |
+| Concurrency | 50 |
+| Median throughput | 26,476 RPS |
+| Average latency | 1.88 ms |
+| P95 latency | 3.87 ms |
+| P99 latency | 5.15 ms |
+| Success rate | 100% |
 
 
+## Simulate Failure and Recovery
 
-A good quick checklist is:
-- ✅ The work can run independently of the caller.
-- ✅ The work may block on I/O, like an HTTP request, file read, or network call.
-- ✅ You want multiple tasks to happen at the same time.
-- ✅ The caller does not need the result immediately before continuing.
-- ✅ It’s background work, like health checks or periodic monitoring.
-- ✅ Running sequentially would unnecessarily delay other work.
-Reasons not to use one:
-- ❌ net/http is already running your request handler concurrently.
-- ❌ The work is tiny and must immediately finish before the next line.
-- ❌ You would create an unbounded number of goroutines.
-- ❌ You have no clear way to stop/cancel the goroutine.
-- ❌ The goroutine would make shared-state synchronization much more complicated for little benefit.
+Make a backend fail health checks:
+
+```bash
+curl -i http://localhost:8083/fail
+```
+
+After three failed health checks, it is removed from routing. Restore it with:
+
+```bash
+curl -i http://localhost:8083/reverse
+```
+
+The next successful health check returns it to rotation. To test request-time retry, use a real transport failure such as an unreachable backend; `/fail` changes only the health endpoint.
+
+## Project Structure
+
+```text
+.
+├── cmd/
+│   └── loadgen/
+│       └── main.go               concurrent load-test client and metrics
+├── docs/
+│   └── images/                   benchmark and test output
+├── main.go                       servers and active health checks
+├── retry.go                      reverse proxy and one-time failover
+├── round_robin.go                Round Robin routing
+├── least_connections.go          Least Connections routing
+├── ip_hash.go                    IP Hash routing
+└── loadtest.sh                   health-failure traffic exercise
+```

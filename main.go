@@ -7,8 +7,6 @@ import (
 	"strconv"
 	"sync/atomic"
 	"time"
-	// "net/http/httputil"
-	// "net/url"
 )
 
 type Backend struct {
@@ -16,16 +14,6 @@ type Backend struct {
 	port       int
 	status     atomic.Bool
 	failHealth atomic.Bool
-}
-
-type RoutingImplementation interface {
-	rerouter(w http.ResponseWriter, r *http.Request)
-}
-
-type BackendImplementation interface {
-	backendHit(b *Backend) http.HandlerFunc
-	healthCheck(b *Backend) http.HandlerFunc
-	failHealth(b *Backend) http.HandlerFunc
 }
 
 var (
@@ -37,9 +25,7 @@ var (
 		{address: "http://localhost:8086", port: 8086},
 	}
 	serverFailures = make([]atomic.Int64, len(serverList))
-	
-	rr = RoundRobin{}
-	lc = LeastConnections{}
+
 	ip = IPHash{}
 
 	client = &http.Client{Timeout: 4 * time.Second}
@@ -48,9 +34,10 @@ var (
 func BackendServer(b *Backend) {
 	backendServer := http.NewServeMux()
 	backendServer.HandleFunc("/", ip.backendHit(b))
-	backendServer.HandleFunc("/health", ip.healthCheck(b)) // endpoint to test status of servers
-backendServer.HandleFunc("/fail", ip.failHealth(b))    // endpoint to trigger servers failing
-	fmt.Printf("Backend Server Starting - %d\n", b.port)   //
+	backendServer.HandleFunc("/health", ip.healthCheck(b))    // endpoint to test status of servers
+	backendServer.HandleFunc("/fail", ip.failHealth(b))       // endpoint to trigger servers failing
+	backendServer.HandleFunc("/reverse", ip.reverseHealth(b)) // endpoint to undo /fail so the server can recover
+	fmt.Printf("Backend Server Starting - %d\n", b.port)
 
 	err := http.ListenAndServe(":"+strconv.Itoa(b.port), backendServer)
 	if err != nil {

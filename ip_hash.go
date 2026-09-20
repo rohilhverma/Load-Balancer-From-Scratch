@@ -1,14 +1,10 @@
 package main
-// need to simulate other IPs
+
 import (
-	"errors"
 	"fmt"
 	"hash/fnv"
-	"log"
 	"net"
 	"net/http"
-	"net/http/httputil"
-	"net/url"
 	"strings"
 )
 
@@ -16,29 +12,16 @@ type IPHash struct{}
 
 func (ip IPHash) rerouter(w http.ResponseWriter, r *http.Request) {
 	client := clientIP(r)
-	addr, err := hashFunction(client)
-	if err != nil {
-		if errors.Is(err, NoActiveServers) {
-			http.Error(w, "No Healthy Backend Available", http.StatusServiceUnavailable)
-		}
-		return
-	}
-	backend, err := url.Parse(addr)
-	if err != nil {
-		log.Fatal(("Unable to find new server"))
-	}
-	fmt.Printf("IP %s hashed to %v\n", client, backend)
-	proxy := &httputil.ReverseProxy{
-		Rewrite: func(s *httputil.ProxyRequest) {
-			s.SetURL(backend)
-		},
-	}
-	proxy.ServeHTTP(w, r)
-	fmt.Println("Proxied to", backend)
+	proxyRequest(w, r, func(exclude *Backend) (*Backend, func(), error) {
+		backend, err := hashBackend(client, exclude)
+		return backend, func() {}, err
+	})
 }
 
 func (ip IPHash) backendHit(b *Backend) http.HandlerFunc {
-	return func(http.ResponseWriter, *http.Request) { fmt.Println("Request Handled") }
+	return func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("X-Backend-Port", fmt.Sprint(b.port))
+	}
 }
 
 func (ip IPHash) healthCheck(b *Backend) http.HandlerFunc {
@@ -59,8 +42,15 @@ func (ip IPHash) failHealth(b *Backend) http.HandlerFunc {
 	}
 }
 
-// clientIP returns the original client from X-Forwarded-For, which can hold a
-// "client, proxy1, proxy2" chain, falling back to the direct peer address.
+func (ip IPHash) reverseHealth(b *Backend) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		b.failHealth.Store(false)
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+
+
 func clientIP(r *http.Request) string {
 	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
 		first, _, _ := strings.Cut(xff, ",")
@@ -73,23 +63,23 @@ func clientIP(r *http.Request) string {
 	return host
 }
 
-func hashFunction(ip string) (string, error) {
+func hashBackend(ip string, exclude *Backend) (*Backend, error) {
 	var m uint64
-	addr := ""
+	var selected *Backend
 	for _, server := range serverList {
-		if server.status.Load() {
+		if server != exclude && server.status.Load() {
 			curr := redevHashing(ip, server.address)
 			if curr >= m {
 				m = curr
-				addr = server.address
+				selected = server
 			}
 		}
 	}
 
-	if addr == "" {
-		return "", NoActiveServers
+	if selected == nil {
+		return nil, NoActiveServers
 	}
-	return addr,nil
+	return selected, nil
 }
 
 func redevHashing(ip string, serveraddr string) uint64 {
