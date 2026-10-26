@@ -61,8 +61,9 @@ func atomicCounterExcluding(exclude *Backend) (*Backend, error) {
 		return nil, NoActiveServers
 	}
 
-	for range total {
-		i := int((count.Add(1) - 1) % int64(total))
+	start := int((count.Add(1) - 1) % int64(total))
+	for offset := range total {
+		i := (start + offset) % total
 		backend := serverList[i]
 		//inactive servers skipped
 		if backend != exclude && backend.status.Load() {
